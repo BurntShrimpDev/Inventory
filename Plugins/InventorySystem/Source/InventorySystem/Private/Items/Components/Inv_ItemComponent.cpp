@@ -1,0 +1,12 @@
+﻿// Copyright Callum Brogan.
+
+
+#include "Items/Components/Inv_ItemComponent.h"
+
+
+UInv_ItemComponent::UInv_ItemComponent()
+{
+	PrimaryComponentTick.bCanEverTick = false;
+	
+	PickupMessage = FString(TEXT("E - Pick Up"));
+}
