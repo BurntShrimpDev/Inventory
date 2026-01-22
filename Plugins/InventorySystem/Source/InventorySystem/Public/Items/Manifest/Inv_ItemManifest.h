@@ -10,6 +10,8 @@
  * The Item Manifest contains all required data for creating a new Inventory Item
  */
 
+struct FInv_ItemFragment;
+
 USTRUCT()
 struct INVENTORYSYSTEM_API FInv_ItemManifest
 {
@@ -18,6 +20,10 @@ struct INVENTORYSYSTEM_API FInv_ItemManifest
 	EInv_ItemCategory GetItemCategory() const { return ItemCategory; }
 	FGameplayTag GetItemType() const { return ItemType; }
 private:
+	
+	UPROPERTY(EditAnywhere, Category="Inventory", meta =(ExcludeBaseStruct))
+	TArray<TInstancedStruct<FInv_ItemFragment>> Fragments;
+	
 	UPROPERTY(EditAnywhere, Category="Inventory")
 	EInv_ItemCategory ItemCategory{EInv_ItemCategory::None};
 	
