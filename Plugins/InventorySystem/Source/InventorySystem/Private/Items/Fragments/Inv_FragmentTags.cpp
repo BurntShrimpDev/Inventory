@@ -3,4 +3,5 @@
 namespace FragmentTags
 {
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GridFragment, "FragmentTags.GridFragment", "Gameplay Tag for Item Grid Fragment")
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(IconFragment, "FragmentTags.IconFragment", "Gameplay Tag for Item Icon Fragment")
 }
