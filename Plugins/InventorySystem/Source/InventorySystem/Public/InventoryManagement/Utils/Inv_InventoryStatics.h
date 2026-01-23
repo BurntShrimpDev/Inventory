@@ -6,6 +6,8 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Inv_InventoryStatics.generated.h"
 
+class UInv_ItemComponent;
+enum class EInv_ItemCategory : uint8;
 class UInv_InventoryComponent;
 /**
  * 
@@ -18,4 +20,6 @@ public:
 	//Note: This function to find an InventoryComponent is currently requiring a PlayerController, which will be a problem when adding inventories to containers or NPCs. 
 	UFUNCTION(BlueprintCallable, Category="Inventory")
 	static UInv_InventoryComponent* GetInventoryComponent(const APlayerController* PlayerController);
+	
+	static EInv_ItemCategory GetItemCategoryFromItemComp(UInv_ItemComponent* ItemComponent);
 };

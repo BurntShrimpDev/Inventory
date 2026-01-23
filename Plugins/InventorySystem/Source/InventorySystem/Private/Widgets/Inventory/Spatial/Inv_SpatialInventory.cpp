@@ -3,8 +3,11 @@
 
 #include "Widgets/Inventory/Spatial/Inv_SpatialInventory.h"
 
+#include "InventorySystem.h"
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
+#include "InventoryManagement/Utils/Inv_InventoryStatics.h"
+#include "InventorySystem.h"
 #include "Widgets/Inventory/Spatial/Inv_InventoryGrid.h"
 
 void UInv_SpatialInventory::NativeOnInitialized()
@@ -13,16 +16,24 @@ void UInv_SpatialInventory::NativeOnInitialized()
 	Button_Equipment->OnClicked.AddDynamic(this, &ThisClass::ShowEquipment);
 	Button_Consumables->OnClicked.AddDynamic(this, &ThisClass::ShowConsumables);
 	Button_Crafting->OnClicked.AddDynamic(this, &ThisClass::ShowCrafting);
-	
+
 	ShowEquipment();
 }
 
 FInv_SlotAvailabilityResult UInv_SpatialInventory::HasRoomForItem(UInv_ItemComponent* ItemComponent) const
 {
-	FInv_SlotAvailabilityResult Result;
-	Result.TotalRoomToFill = 1;
-	//return FInv_SlotAvailabilityResult();
-	return Result;
+	switch (UInv_InventoryStatics::GetItemCategoryFromItemComp(ItemComponent))
+	{
+	case EInv_ItemCategory::Equipment:
+		return Grid_Equipment->HasRoomForItem(ItemComponent);
+	case EInv_ItemCategory::Consumable:
+		return Grid_Consumables->HasRoomForItem(ItemComponent);
+	case EInv_ItemCategory::Crafting:
+		return Grid_Crafting->HasRoomForItem(ItemComponent);
+		default:
+		UE_LOG(LogInventory, Error, TEXT("ItemComponent doesn't have a valid Item Category"))
+		return FInv_SlotAvailabilityResult();
+	}
 }
 
 void UInv_SpatialInventory::ShowEquipment()
@@ -51,6 +62,6 @@ void UInv_SpatialInventory::DisableButton(UButton* Button)
 void UInv_SpatialInventory::SetActiveGrid(UInv_InventoryGrid* InventoryGrid, UButton* Button)
 {
 	DisableButton(Button);
-	
+
 	Switcher->SetActiveWidget(InventoryGrid);
 }
