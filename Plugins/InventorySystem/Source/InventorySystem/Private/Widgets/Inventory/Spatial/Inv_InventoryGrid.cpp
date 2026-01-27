@@ -47,7 +47,10 @@ FInv_SlotAvailabilityResult UInv_InventoryGrid::HasRoomForItem(const FInv_ItemMa
 	int32 AmountToFill = Result.bStackable ? StackableFragment->GetStackCount() : 1;
 	
 	// For Each Grid Slot:
+	for (const auto& GridSlot :GridSlots)
+	{
 		// If we don't have anymore to fill, break out of loop early
+		if (AmountToFill == 0) break;
 		// Is this index claimed yet?
 		// Can the item fit here? Grid Dimensions?
 		//Is there room at this index? Other items in the way?
@@ -59,6 +62,8 @@ FInv_SlotAvailabilityResult UInv_InventoryGrid::HasRoomForItem(const FInv_ItemMa
 			// if stackable, is this slot at the max stack?
 		// How much to fill? total size and remainder?
 		// Update the amount left to fill
+	}
+		
 	// How much is the Remainder?
 	
 	
