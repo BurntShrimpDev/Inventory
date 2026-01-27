@@ -66,8 +66,7 @@ FInv_SlotAvailabilityResult UInv_InventoryGrid::HasRoomForItem(const FInv_ItemMa
 
 		CheckedIndices.Append(TentativelyClaimed);
 
-		
-	
+
 		// How much to fill? total size and remainder?
 		// Update the amount left to fill
 	}
@@ -185,17 +184,18 @@ bool UInv_InventoryGrid::HasRoomAtIndex(const UInv_GridSlot* GridSlot, const FIn
 {
 	//Is there room at this index? Other items in the way?
 	bool bHasRoomAtIndex = true;
-	UInv_InventoryStatics::ForEach2D(GridSlots, GridSlot->GetIndex(), Dimensions, Columns, [&](const UInv_GridSlot* SubGridSlot)
-	{
-		if (CheckSlotContraints(SubGridSlot))
-		{
-			OutTentativelyClaimedIndices.Add(SubGridSlot->GetIndex());
-		}
-		else
-		{
-			bHasRoomAtIndex = false;
-		}
-	});
+	UInv_InventoryStatics::ForEach2D(GridSlots, GridSlot->GetIndex(), Dimensions, Columns,
+	                                 [&](const UInv_GridSlot* SubGridSlot)
+	                                 {
+		                                 if (CheckSlotConstraints(SubGridSlot, CheckedIndices, OutTentativelyClaimedIndices))
+		                                 {
+			                                 OutTentativelyClaimedIndices.Add(SubGridSlot->GetIndex());
+		                                 }
+		                                 else
+		                                 {
+			                                 bHasRoomAtIndex = false;
+		                                 }
+	                                 });
 
 	return bHasRoomAtIndex;
 }
@@ -206,15 +206,27 @@ FIntPoint UInv_InventoryGrid::GetItemDimensions(const FInv_ItemManifest& Manifes
 	return GridFragment ? GridFragment->GetGridSize() : FIntPoint(1, 1);
 }
 
-bool UInv_InventoryGrid::CheckSlotContraints(const UInv_GridSlot* SubGridSlot) const
+bool UInv_InventoryGrid::CheckSlotConstraints(const UInv_GridSlot* SubGridSlot, const TSet<int32>& CheckedIndices,
+                                              TSet<int32>& OutTentativelyClaimedIndices) const
 {
-	// Check other important conditions - ForEach2D over a 2D range 
 	// Index claimed?
+	if (IsIndexClaimed(CheckedIndices, SubGridSlot->GetIndex())) return false;
 	// Has valid item?
+	if (!HasValidItem(SubGridSlot))
+	{
+		OutTentativelyClaimedIndices.Add(SubGridSlot->GetIndex());
+		return true;
+	}
 	// Is this item same time as item being added?
 	// if so, is item stackable?
 	// if stackable, is this slot at the max stack?
+
 	return false;
+}
+
+bool UInv_InventoryGrid::HasValidItem(const UInv_GridSlot* GridSlot) const
+{
+	return GridSlot->GetInventoryItem().IsValid();
 }
 
 

@@ -57,7 +57,8 @@ private:
 	bool HasRoomAtIndex(const UInv_GridSlot* GridSlot, const FIntPoint& Dimensions, const TSet<int32>& CheckedIndices,
 	                    TSet<int32>& OutTentativelyClaimedIndices);
 	FIntPoint GetItemDimensions(const FInv_ItemManifest& Manifest) const;
-	bool CheckSlotContraints(const UInv_GridSlot* SubGridSlot) const;
+	bool CheckSlotConstraints(const UInv_GridSlot* SubGridSlot, const TSet<int32>& CheckedIndices, TSet<int32>& OutTentativelyClaimedIndices) const;
+	bool HasValidItem(const UInv_GridSlot* GridSlot) const;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category="Inventory")
 	EInv_ItemCategory ItemCategory;
