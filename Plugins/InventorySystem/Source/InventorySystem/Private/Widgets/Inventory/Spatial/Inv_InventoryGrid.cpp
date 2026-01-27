@@ -38,7 +38,10 @@ FInv_SlotAvailabilityResult UInv_InventoryGrid::HasRoomForItem(const FInv_ItemMa
 {
 	FInv_SlotAvailabilityResult Result;
 	
-	// Check if item is stackable.
+	// Check If the item is Stackable
+	const FInv_StackableFragment* StackableFragment = Manifest.GetFragmentOfType<FInv_StackableFragment>();
+	Result.bStackable = StackableFragment != nullptr;
+	
 	// Check how many stacks to add.
 	// For Each Grid Slot:
 		// If we don't have anymore to fill, break out of loop early
