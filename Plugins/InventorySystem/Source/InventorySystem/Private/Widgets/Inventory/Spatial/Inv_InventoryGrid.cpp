@@ -187,7 +187,7 @@ bool UInv_InventoryGrid::HasRoomAtIndex(const UInv_GridSlot* GridSlot, const FIn
 	UInv_InventoryStatics::ForEach2D(GridSlots, GridSlot->GetIndex(), Dimensions, Columns,
 	                                 [&](const UInv_GridSlot* SubGridSlot)
 	                                 {
-		                                 if (CheckSlotConstraints(SubGridSlot, CheckedIndices, OutTentativelyClaimedIndices))
+		                                 if (CheckSlotConstraints(GridSlot, SubGridSlot, CheckedIndices, OutTentativelyClaimedIndices))
 		                                 {
 			                                 OutTentativelyClaimedIndices.Add(SubGridSlot->GetIndex());
 		                                 }
@@ -206,7 +206,7 @@ FIntPoint UInv_InventoryGrid::GetItemDimensions(const FInv_ItemManifest& Manifes
 	return GridFragment ? GridFragment->GetGridSize() : FIntPoint(1, 1);
 }
 
-bool UInv_InventoryGrid::CheckSlotConstraints(const UInv_GridSlot* SubGridSlot, const TSet<int32>& CheckedIndices,
+bool UInv_InventoryGrid::CheckSlotConstraints(const UInv_GridSlot* GridSlot, const UInv_GridSlot* SubGridSlot, const TSet<int32>& CheckedIndices,
                                               TSet<int32>& OutTentativelyClaimedIndices) const
 {
 	// Index claimed?
@@ -217,6 +217,8 @@ bool UInv_InventoryGrid::CheckSlotConstraints(const UInv_GridSlot* SubGridSlot, 
 		OutTentativelyClaimedIndices.Add(SubGridSlot->GetIndex());
 		return true;
 	}
+	// Is this Grid Slot an Upper Left Slot?
+	if (!IsUpperLeftSlot(GridSlot, SubGridSlot)) return false;
 	// Is this item same time as item being added?
 	// if so, is item stackable?
 	// if stackable, is this slot at the max stack?
@@ -227,6 +229,11 @@ bool UInv_InventoryGrid::CheckSlotConstraints(const UInv_GridSlot* SubGridSlot, 
 bool UInv_InventoryGrid::HasValidItem(const UInv_GridSlot* GridSlot) const
 {
 	return GridSlot->GetInventoryItem().IsValid();
+}
+
+bool UInv_InventoryGrid::IsUpperLeftSlot(const UInv_GridSlot* GridSlot, const UInv_GridSlot* SubGridSlot) const
+{
+	return SubGridSlot->GetUpperLeftIndex() == GridSlot->GetIndex();
 }
 
 
