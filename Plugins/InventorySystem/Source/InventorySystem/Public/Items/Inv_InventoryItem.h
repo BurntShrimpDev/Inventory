@@ -18,10 +18,12 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual bool IsSupportedForNetworking() const override { return true; }
 	
+	void SetItemManifest(const FInv_ItemManifest& Manifest);
 	const FInv_ItemManifest& GetItemManifest() const { return ItemManifest.Get<FInv_ItemManifest>(); }
 	FInv_ItemManifest& GetItemManifestMutable() { return ItemManifest.GetMutable<FInv_ItemManifest>(); }
+	bool IsStackable() const;
 	
-	void SetItemManifest(const FInv_ItemManifest& Manifest);
+	
 private:
 	UPROPERTY(VisibleAnywhere, meta = (BaseStruct = "/Script/InventorySystem.Inv_ItemManifest"), Replicated)
 	FInstancedStruct ItemManifest;
