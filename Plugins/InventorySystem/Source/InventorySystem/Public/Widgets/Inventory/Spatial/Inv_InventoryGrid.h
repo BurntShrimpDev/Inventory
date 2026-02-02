@@ -56,7 +56,8 @@ private:
 	void UpdateGridSlots(UInv_InventoryItem* NewItem, const int32 Index, bool bStackableItem, const int32 StackAmount);
 	bool IsIndexClaimed(const TSet<int32>& CheckedIndices, const int32 Index) const;
 	bool HasRoomAtIndex(const UInv_GridSlot* GridSlot, const FIntPoint& Dimensions, const TSet<int32>& CheckedIndices,
-	                    TSet<int32>& OutTentativelyClaimedIndices, const FGameplayTag& ItemType, const int32 MaxStackSize);
+	                    TSet<int32>& OutTentativelyClaimedIndices, const FGameplayTag& ItemType,
+	                    const int32 MaxStackSize);
 	FIntPoint GetItemDimensions(const FInv_ItemManifest& Manifest) const;
 	bool CheckSlotConstraints(const UInv_GridSlot* GridSlot, const UInv_GridSlot* SubGridSlot,
 	                          const TSet<int32>& CheckedIndices, TSet<int32>& OutTentativelyClaimedIndices,
@@ -65,8 +66,11 @@ private:
 	bool IsUpperLeftSlot(const UInv_GridSlot* GridSlot, const UInv_GridSlot* SubGridSlot) const;
 	bool DoesItemTypeMatch(const UInv_InventoryItem* SubItem, const FGameplayTag& ItemType) const;
 	bool IsInGridBounds(const int32 StartIndex, const FIntPoint& ItemDimensions) const;
-	int32 DetermineFillAmountForSlot(const bool bStackable, const int32 MaxStackSize, const int32 AmountToFill, const UInv_GridSlot* GridSlot);
+	int32 DetermineFillAmountForSlot(const bool bStackable, const int32 MaxStackSize, const int32 AmountToFill,
+	                                 const UInv_GridSlot* GridSlot);
 	int32 GetStackAmount(const UInv_GridSlot* GridSlot) const;
+	UFUNCTION()
+	void AddStacks(const FInv_SlotAvailabilityResult& Result);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category="Inventory")
 	EInv_ItemCategory ItemCategory;
