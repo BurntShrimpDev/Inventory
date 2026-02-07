@@ -102,6 +102,7 @@ FInv_SpaceQueryResult UInv_InventoryGrid::CheckHoverPosition(const FIntPoint& Po
 	FInv_SpaceQueryResult Result;
 	
 	// are the dimensions within the grid bounds?
+	if (!IsInGridBounds(UInv_WidgetUtils::GetIndexFromPosition(Position, Columns), Dimensions)) return Result;
 	
 	// any items in the way?
 	
