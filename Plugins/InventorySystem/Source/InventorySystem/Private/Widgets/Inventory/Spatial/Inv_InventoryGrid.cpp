@@ -56,6 +56,8 @@ void UInv_InventoryGrid::OnTileParametersUpdated(const FInv_TileParameters& Para
 
 	// Get Hover Item dimensions
 	const FIntPoint Dimensions = HoverItem->GetGridDimensions();
+	
+	
 
 	// Calculate the starting coordinate for highlighting
 	const FIntPoint StartingCoordinate = CalculateStartingCoordinate(Parameters.TileCoordinates, Dimensions, Parameters.TileQuadrant);
@@ -75,19 +77,19 @@ FIntPoint UInv_InventoryGrid::CalculateStartingCoordinate(const FIntPoint& Coord
 	{
 	case EInv_TileQuadrant::TopLeft:
 		StartingCoordinate.X = Coordinate.X - FMath::FloorToInt(0.5f * Dimensions.X);
-		StartingCoordinate.Y = Dimensions.Y - FMath::FloorToInt(0.5f * Dimensions.Y);
+		StartingCoordinate.Y = Coordinate.Y - FMath::FloorToInt(0.5f * Dimensions.Y);
 		break;
 	case EInv_TileQuadrant::TopRight:
 		StartingCoordinate.X = Coordinate.X - FMath::FloorToInt(0.5f * Dimensions.X) + HasEvenWidth;
-		StartingCoordinate.Y = Dimensions.Y - FMath::FloorToInt(0.5f * Dimensions.Y);
+		StartingCoordinate.Y = Coordinate.Y - FMath::FloorToInt(0.5f * Dimensions.Y);
 		break;
 	case EInv_TileQuadrant::BottomLeft:
 		StartingCoordinate.X = Coordinate.X - FMath::FloorToInt(0.5f * Dimensions.X);
-		StartingCoordinate.Y = Dimensions.Y - FMath::FloorToInt(0.5f * Dimensions.Y) + HasEvenHeight;
+		StartingCoordinate.Y = Coordinate.Y - FMath::FloorToInt(0.5f * Dimensions.Y) + HasEvenHeight;
 		break;
 	case EInv_TileQuadrant::BottomRight:
 		StartingCoordinate.X = Coordinate.X - FMath::FloorToInt(0.5f * Dimensions.X) + HasEvenWidth;
-		StartingCoordinate.Y = Dimensions.Y - FMath::FloorToInt(0.5f * Dimensions.Y) + HasEvenHeight;
+		StartingCoordinate.Y = Coordinate.Y - FMath::FloorToInt(0.5f * Dimensions.Y) + HasEvenHeight;
 		break;
 	default:
 		UE_LOG(LogInventory, Error, TEXT("Invalid Quadrant in CalculateStartingCoordinate"));
@@ -97,17 +99,34 @@ FIntPoint UInv_InventoryGrid::CalculateStartingCoordinate(const FIntPoint& Coord
 }
 
 FInv_SpaceQueryResult UInv_InventoryGrid::CheckHoverPosition(const FIntPoint& Position,
-	const FIntPoint& Dimensions) const
+	const FIntPoint& Dimensions) 
 {
 	FInv_SpaceQueryResult Result;
 	
 	// are the dimensions within the grid bounds?
 	if (!IsInGridBounds(UInv_WidgetUtils::GetIndexFromPosition(Position, Columns), Dimensions)) return Result;
 	
-	// any items in the way?
+	Result.bHasSpace = true;
+	
+	// If more than one of the indices occupied with the same item, need to see if they all have the same upper left index.
+	TSet<int32> OccupiedUpperLeftIndices;
+	UInv_InventoryStatics::ForEach2D(GridSlots, UInv_WidgetUtils::GetIndexFromPosition(Position, Columns), Dimensions, Columns, [&](const UInv_GridSlot* GridSlot)
+	{
+		if (GridSlot->GetInventoryItem().IsValid())
+		{
+			OccupiedUpperLeftIndices.Add(GridSlot->GetUpperLeftIndex());
+			Result.bHasSpace = false;
+		}
+	});
+	
 	
 	// if so, is there only one item in the way? (can we swap?)
-	
+	if (OccupiedUpperLeftIndices.Num() == 1) // single valid item at position for swapping/combine
+	{
+		const int32 Index = *OccupiedUpperLeftIndices.CreateConstIterator();
+		Result.ValidItem = GridSlots[Index]->GetInventoryItem();
+		Result.UpperLeftIndex = GridSlots[Index]->GetUpperLeftIndex();
+	}
 	
 	return Result;
 }
