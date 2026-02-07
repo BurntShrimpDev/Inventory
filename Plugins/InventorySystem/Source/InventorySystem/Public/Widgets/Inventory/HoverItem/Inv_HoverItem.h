@@ -30,6 +30,7 @@ class INVENTORYSYSTEM_API UInv_HoverItem : public UUserWidget
 	int32 GetPreviousGridIndex() const { return PreviousGridIndex; }
 	void SetPreviousGridIndex(const int32 Index ) { PreviousGridIndex = Index; }
 	void SetGridDimensions(const FIntPoint& Dimensions) { GridDimensions = Dimensions; }
+	FIntPoint GetGridDimensions() const { return GridDimensions; }
 	UInv_InventoryItem* GetInventoryItem() const;
 	void SetInventoryItem(UInv_InventoryItem* Item);
 	
