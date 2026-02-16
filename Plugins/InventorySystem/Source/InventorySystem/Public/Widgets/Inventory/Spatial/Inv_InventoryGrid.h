@@ -85,6 +85,8 @@ private:
 	FIntPoint CalculateStartingCoordinate(const FIntPoint& Coordinate, const FIntPoint& Dimensions, const EInv_TileQuadrant Quadrant) const;
 	FInv_SpaceQueryResult CheckHoverPosition(const FIntPoint& Position, const FIntPoint& Dimensions);
 	bool CursorExitedCanvas(const FVector2D& CanvasPos, const FVector2D& CanvasSize, const FVector2D& Location);
+	void HighlightSlots(const int32 Index, const FIntPoint& Dimensions);
+	void UnhighlightSlots(const int32 Index, const FIntPoint& Dimensions);
 	
 	UFUNCTION()
 	void AddStacks(const FInv_SlotAvailabilityResult& Result);
@@ -131,4 +133,7 @@ private:
 	
 	bool bMouseWithinCanvas;
 	bool bLastMouseWithinCanvas;
+	
+	int32 LastHighlightedIndex;
+	FIntPoint LastHighlightedDimensions;
 };

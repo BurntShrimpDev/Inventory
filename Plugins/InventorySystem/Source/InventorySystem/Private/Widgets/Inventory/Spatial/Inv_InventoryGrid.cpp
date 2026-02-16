@@ -38,12 +38,14 @@ void UInv_InventoryGrid::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
 	{
 		return;
 	}
-	
+
 	UpdateTileParameters(CanvasPosition, MousePosition);
 }
 
 void UInv_InventoryGrid::UpdateTileParameters(const FVector2D& CanvasPosition, const FVector2D& MousePosition)
 {
+	if (!bMouseWithinCanvas) return;
+
 	// Calculate the tile quadrant, index and coordinates
 	const FIntPoint HoveredTileCoordinates = CalculateHoveredCoordinates(CanvasPosition, MousePosition);
 
@@ -61,14 +63,26 @@ void UInv_InventoryGrid::OnTileParametersUpdated(const FInv_TileParameters& Para
 
 	// Get Hover Item dimensions
 	const FIntPoint Dimensions = HoverItem->GetGridDimensions();
-	
-	
+
 
 	// Calculate the starting coordinate for highlighting
-	const FIntPoint StartingCoordinate = CalculateStartingCoordinate(Parameters.TileCoordinates, Dimensions, Parameters.TileQuadrant);
+	const FIntPoint StartingCoordinate = CalculateStartingCoordinate(Parameters.TileCoordinates, Dimensions,
+	                                                                 Parameters.TileQuadrant);
 	ItemDropIndex = UInv_WidgetUtils::GetIndexFromPosition(StartingCoordinate, Columns);
 
 	CurrentQueryResult = CheckHoverPosition(StartingCoordinate, Dimensions);
+
+	if (CurrentQueryResult.bHasSpace)
+	{
+		HighlightSlots(ItemDropIndex, Dimensions);
+		return;
+	}
+	UnhighlightSlots(LastHighlightedIndex, LastHighlightedDimensions);
+	
+	if (CurrentQueryResult.ValidItem.IsValid())
+	{
+		//Todo: There is a single item in this space, we can swap or add stacks.
+	}
 }
 
 FIntPoint UInv_InventoryGrid::CalculateStartingCoordinate(const FIntPoint& Coordinate, const FIntPoint& Dimensions,
@@ -104,27 +118,28 @@ FIntPoint UInv_InventoryGrid::CalculateStartingCoordinate(const FIntPoint& Coord
 }
 
 FInv_SpaceQueryResult UInv_InventoryGrid::CheckHoverPosition(const FIntPoint& Position,
-	const FIntPoint& Dimensions) 
+                                                             const FIntPoint& Dimensions)
 {
 	FInv_SpaceQueryResult Result;
-	
+
 	// are the dimensions within the grid bounds?
 	if (!IsInGridBounds(UInv_WidgetUtils::GetIndexFromPosition(Position, Columns), Dimensions)) return Result;
-	
+
 	Result.bHasSpace = true;
-	
+
 	// If more than one of the indices occupied with the same item, need to see if they all have the same upper left index.
 	TSet<int32> OccupiedUpperLeftIndices;
-	UInv_InventoryStatics::ForEach2D(GridSlots, UInv_WidgetUtils::GetIndexFromPosition(Position, Columns), Dimensions, Columns, [&](const UInv_GridSlot* GridSlot)
-	{
-		if (GridSlot->GetInventoryItem().IsValid())
-		{
-			OccupiedUpperLeftIndices.Add(GridSlot->GetUpperLeftIndex());
-			Result.bHasSpace = false;
-		}
-	});
-	
-	
+	UInv_InventoryStatics::ForEach2D(GridSlots, UInv_WidgetUtils::GetIndexFromPosition(Position, Columns), Dimensions,
+	                                 Columns, [&](const UInv_GridSlot* GridSlot)
+	                                 {
+		                                 if (GridSlot->GetInventoryItem().IsValid())
+		                                 {
+			                                 OccupiedUpperLeftIndices.Add(GridSlot->GetUpperLeftIndex());
+			                                 Result.bHasSpace = false;
+		                                 }
+	                                 });
+
+
 	// if so, is there only one item in the way? (can we swap?)
 	if (OccupiedUpperLeftIndices.Num() == 1) // single valid item at position for swapping/combine
 	{
@@ -132,29 +147,57 @@ FInv_SpaceQueryResult UInv_InventoryGrid::CheckHoverPosition(const FIntPoint& Po
 		Result.ValidItem = GridSlots[Index]->GetInventoryItem();
 		Result.UpperLeftIndex = GridSlots[Index]->GetUpperLeftIndex();
 	}
-	
+
 	return Result;
 }
 
 bool UInv_InventoryGrid::CursorExitedCanvas(const FVector2D& CanvasPos, const FVector2D& CanvasSize,
-	const FVector2D& Location)
+                                            const FVector2D& Location)
 {
 	bLastMouseWithinCanvas = bMouseWithinCanvas;
 	bMouseWithinCanvas = UInv_WidgetUtils::IsWithinBounds(CanvasPos, CanvasSize, Location);
 	if (!bMouseWithinCanvas && bLastMouseWithinCanvas)
 	{
-		// TODO: Unhighlight slots()
+		UnhighlightSlots(LastHighlightedIndex, LastHighlightedDimensions);
 		return true;
 	}
 	return false;
+}
+
+void UInv_InventoryGrid::HighlightSlots(const int32 Index, const FIntPoint& Dimensions)
+{
+	if (!bMouseWithinCanvas) return;
+	UnhighlightSlots(LastHighlightedIndex, LastHighlightedDimensions);
+
+	UInv_InventoryStatics::ForEach2D(GridSlots, Index, Dimensions, Columns, [&](UInv_GridSlot* GridSlot)
+	{
+		GridSlot->SetOccupiedTexture();
+	});
+	LastHighlightedDimensions = Dimensions;
+	LastHighlightedIndex = Index;
+}
+
+void UInv_InventoryGrid::UnhighlightSlots(const int32 Index, const FIntPoint& Dimensions)
+{
+	UInv_InventoryStatics::ForEach2D(GridSlots, Index, Dimensions, Columns, [&](UInv_GridSlot* GridSlot)
+	{
+		if (GridSlot->IsAvailable())
+		{
+			GridSlot->SetUnoccupiedTexture();
+		}
+		else
+		{
+			GridSlot->SetOccupiedTexture();
+		}
+	});
 }
 
 FIntPoint UInv_InventoryGrid::CalculateHoveredCoordinates(const FVector2D& CanvasPosition,
                                                           const FVector2D& MousePosition) const
 {
 	return FIntPoint{
-		static_cast<int32>(FMath::FloorToInt(MousePosition.X - CanvasPosition.X / TileSize)),
-		static_cast<int32>(FMath::FloorToInt(MousePosition.Y - CanvasPosition.Y / TileSize))
+		static_cast<int32>(FMath::FloorToInt((MousePosition.X - CanvasPosition.X) / TileSize)),
+		static_cast<int32>(FMath::FloorToInt((MousePosition.Y - CanvasPosition.Y) / TileSize))
 	};
 }
 
