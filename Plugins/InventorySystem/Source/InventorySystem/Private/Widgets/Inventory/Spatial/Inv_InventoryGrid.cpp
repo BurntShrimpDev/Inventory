@@ -78,10 +78,13 @@ void UInv_InventoryGrid::OnTileParametersUpdated(const FInv_TileParameters& Para
 		return;
 	}
 	UnhighlightSlots(LastHighlightedIndex, LastHighlightedDimensions);
-	
-	if (CurrentQueryResult.ValidItem.IsValid())
+
+	if (CurrentQueryResult.ValidItem.IsValid() && GridSlots.IsValidIndex(CurrentQueryResult.UpperLeftIndex))
 	{
-		//Todo: There is a single item in this space, we can swap or add stacks.
+		const FInv_GridFragment* GridFragment = GetFragment<FInv_GridFragment>(CurrentQueryResult.ValidItem.Get(), FragmentTags::GridFragment);
+		if (!GridFragment) return;
+		
+		ChangeHoverType(CurrentQueryResult.UpperLeftIndex, GridFragment->GetGridSize(), EInv_GridSlotState::GreyedOut);
 	}
 }
 
@@ -190,6 +193,33 @@ void UInv_InventoryGrid::UnhighlightSlots(const int32 Index, const FIntPoint& Di
 			GridSlot->SetOccupiedTexture();
 		}
 	});
+}
+
+void UInv_InventoryGrid::ChangeHoverType(const int32 Index, const FIntPoint& Diemsions,
+                                         EInv_GridSlotState GridSlotState)
+{
+	UnhighlightSlots(LastHighlightedIndex, LastHighlightedDimensions);
+	UInv_InventoryStatics::ForEach2D(GridSlots, Index, Diemsions, Columns,
+	                                 [State = GridSlotState](UInv_GridSlot* GridSlot)
+	                                 {
+		                                 switch (State)
+		                                 {
+		                                 case EInv_GridSlotState::Occupied:
+			                                 GridSlot->SetOccupiedTexture();
+			                                 break;
+		                                 case EInv_GridSlotState::Unoccupied:
+			                                 GridSlot->SetUnoccupiedTexture();
+			                                 break;
+		                                 case EInv_GridSlotState::GreyedOut:
+			                                 GridSlot->SetGreyedOutTexture();
+			                                 break;
+		                                 case EInv_GridSlotState::Selected:
+			                                 GridSlot->SetSelectedTexture();
+			                                 break;
+		                                 }
+	                                 });
+	LastHighlightedIndex = Index;
+	LastHighlightedDimensions = Diemsions;
 }
 
 FIntPoint UInv_InventoryGrid::CalculateHoveredCoordinates(const FVector2D& CanvasPosition,
